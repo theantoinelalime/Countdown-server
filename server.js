@@ -5,8 +5,11 @@ const GIFEncoder = require('gif-encoder-2');
 // 1er avril 2026, 17h00 heure de l'Est (UTC-4 en avril)
 const TARGET = new Date('2026-04-01T17:00:00-04:00').getTime();
 
-const WIDTH = 480;
-const HEIGHT = 120;
+const SCALE = 2;
+const WIDTH = 400;
+const HEIGHT = 100;
+const RENDER_W = WIDTH * SCALE;
+const RENDER_H = HEIGHT * SCALE;
 const FRAMES = 15;
 const DELAY = 1000;
 
@@ -32,15 +35,19 @@ function calcTime(offset) {
 }
 
 function drawFrame(ctx, time) {
+  ctx.save();
+  ctx.scale(SCALE, SCALE);
+
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
   if (time.expired) {
     ctx.fillStyle = '#111111';
-    ctx.font = 'bold 22px Arial, Helvetica, sans-serif';
+    ctx.font = 'bold 20px Arial, Helvetica, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText("L'offre est terminee!", WIDTH / 2, HEIGHT / 2);
+    ctx.restore();
     return;
   }
 
@@ -51,10 +58,10 @@ function drawFrame(ctx, time) {
     { val: pad(time.s), label: 'SECONDES' },
   ];
 
-  const boxW = 90;
-  const boxH = 80;
-  const gap = 12;
-  const sepW = 14;
+  const boxW = 75;
+  const boxH = 66;
+  const gap = 10;
+  const sepW = 12;
   const totalW = (units.length * boxW) + ((units.length - 1) * (gap + sepW + gap));
   const startX = (WIDTH - totalW) / 2;
   const boxY = (HEIGHT - boxH) / 2;
@@ -63,31 +70,33 @@ function drawFrame(ctx, time) {
     const x = startX + i * (boxW + gap + sepW + gap);
 
     ctx.fillStyle = '#f5f5f5';
-    roundRect(ctx, x, boxY, boxW, boxH, 10);
+    roundRect(ctx, x, boxY, boxW, boxH, 8);
     ctx.fill();
 
     ctx.strokeStyle = '#e8e8e8';
     ctx.lineWidth = 1;
-    roundRect(ctx, x, boxY, boxW, boxH, 10);
+    roundRect(ctx, x, boxY, boxW, boxH, 8);
     ctx.stroke();
 
     ctx.fillStyle = '#111111';
-    ctx.font = 'bold 32px Arial, Helvetica, sans-serif';
+    ctx.font = 'bold 26px Arial, Helvetica, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(unit.val, x + boxW / 2, boxY + boxH / 2 - 6);
+    ctx.fillText(unit.val, x + boxW / 2, boxY + boxH / 2 - 5);
 
     ctx.fillStyle = '#999999';
-    ctx.font = '500 8px Arial, Helvetica, sans-serif';
-    ctx.fillText(unit.label, x + boxW / 2, boxY + boxH - 14);
+    ctx.font = '500 7px Arial, Helvetica, sans-serif';
+    ctx.fillText(unit.label, x + boxW / 2, boxY + boxH - 12);
 
     if (i < units.length - 1) {
       const sepX = x + boxW + gap + sepW / 2;
       ctx.fillStyle = '#cccccc';
-      ctx.font = '300 24px Arial, Helvetica, sans-serif';
-      ctx.fillText(':', sepX, boxY + boxH / 2 - 8);
+      ctx.font = '300 20px Arial, Helvetica, sans-serif';
+      ctx.fillText(':', sepX, boxY + boxH / 2 - 6);
     }
   });
+
+  ctx.restore();
 }
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -106,9 +115,9 @@ function roundRect(ctx, x, y, w, h, r) {
 
 function generateGIF() {
   return new Promise((resolve, reject) => {
-    const canvas = createCanvas(WIDTH, HEIGHT);
+    const canvas = createCanvas(RENDER_W, RENDER_H);
     const ctx = canvas.getContext('2d');
-    const encoder = new GIFEncoder(WIDTH, HEIGHT);
+    const encoder = new GIFEncoder(RENDER_W, RENDER_H);
 
     encoder.setDelay(DELAY);
     encoder.setRepeat(0);
