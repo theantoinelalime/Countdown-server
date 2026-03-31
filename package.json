@@ -1,0 +1,14 @@
+{
+  "name": "countdown-gif-server",
+  "version": "1.0.0",
+  "description": "Serveur qui génère un GIF countdown dynamique en temps réel",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "canvas": "^2.11.2",
+    "gif-encoder-2": "^1.0.5"
+  }
+}
