@@ -7,8 +7,13 @@ const TARGET = new Date('2026-04-01T17:00:00-04:00').getTime();
 
 const WIDTH = 480;
 const HEIGHT = 120;
-const FRAMES = 30; // 30 frames = 30 secondes d'animation
-const DELAY = 1000; // 1 seconde par frame
+const FRAMES = 15;
+const DELAY = 1000;
+
+// Cache: GIF pre-genere, renouvele toutes les 30 secondes
+let cachedGIF = null;
+let cacheTime = 0;
+const CACHE_TTL = 30000;
 
 function pad(n) {
   return String(n).padStart(2, '0');
@@ -27,7 +32,6 @@ function calcTime(offset) {
 }
 
 function drawFrame(ctx, time) {
-  // Fond blanc
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
@@ -58,30 +62,25 @@ function drawFrame(ctx, time) {
   units.forEach((unit, i) => {
     const x = startX + i * (boxW + gap + sepW + gap);
 
-    // Boite grise
     ctx.fillStyle = '#f5f5f5';
     roundRect(ctx, x, boxY, boxW, boxH, 10);
     ctx.fill();
 
-    // Bordure
     ctx.strokeStyle = '#e8e8e8';
     ctx.lineWidth = 1;
     roundRect(ctx, x, boxY, boxW, boxH, 10);
     ctx.stroke();
 
-    // Valeur
     ctx.fillStyle = '#111111';
     ctx.font = 'bold 32px Arial, Helvetica, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(unit.val, x + boxW / 2, boxY + boxH / 2 - 6);
 
-    // Label
     ctx.fillStyle = '#999999';
     ctx.font = '500 8px Arial, Helvetica, sans-serif';
     ctx.fillText(unit.label, x + boxW / 2, boxY + boxH - 14);
 
-    // Separateur :
     if (i < units.length - 1) {
       const sepX = x + boxW + gap + sepW / 2;
       ctx.fillStyle = '#cccccc';
@@ -112,8 +111,8 @@ function generateGIF() {
     const encoder = new GIFEncoder(WIDTH, HEIGHT);
 
     encoder.setDelay(DELAY);
-    encoder.setRepeat(0); // boucle infinie
-    encoder.setQuality(10);
+    encoder.setRepeat(0);
+    encoder.setQuality(20);
 
     const chunks = [];
     encoder.createReadStream()
@@ -133,15 +132,31 @@ function generateGIF() {
   });
 }
 
+async function getCachedGIF() {
+  const now = Date.now();
+  if (cachedGIF && (now - cacheTime) < CACHE_TTL) {
+    return cachedGIF;
+  }
+  cachedGIF = await generateGIF();
+  cacheTime = now;
+  return cachedGIF;
+}
+
+// Pre-generer le GIF au demarrage
+generateGIF().then(gif => {
+  cachedGIF = gif;
+  cacheTime = Date.now();
+  console.log('GIF pre-genere et mis en cache');
+});
+
 const PORT = process.env.PORT || 3000;
 
 const server = http.createServer(async (req, res) => {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
 
   if (req.url === '/countdown.gif' || req.url === '/') {
     try {
-      const gif = await generateGIF();
+      const gif = await getCachedGIF();
       res.writeHead(200, {
         'Content-Type': 'image/gif',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
