@@ -3,7 +3,7 @@ const { createCanvas } = require('canvas');
 const GIFEncoder = require('gif-encoder-2');
 
 // 1er avril 2026, 17h00 heure de l'Est (UTC-4 en avril)
-const TARGET = new Date('2026-04-01T17:00:00-04:00').getTime();
+const TARGET = new Date('2026-04-05T23:59:00-04:00').getTime();
 
 const SCALE = 2;
 const WIDTH = 240;
